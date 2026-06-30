@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a5f3f">
+    <title>ComPrice Scanner — Root Crop & DTI Price Monitor</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥔</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a5f3f; --primary-light: #2d8f5f; --primary-dark: #0d3d28;
+            --accent: #f59e0b; --accent-light: #fbbf24; --danger: #ef4444; --success: #10b981;
+            --bg: #f0f4f0; --card: #ffffff; --text: #1e293b; --text-light: #64748b;
+            --text-muted: #94a3b8; --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius: 16px; --radius-lg: 24px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            line-height: 1.6; overflow-x: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+            color: white; padding: 0; position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute; top: -50%; right: -20%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .header::after {
+            content: ''; position: absolute; bottom: -30%; left: -10%;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .header-top {
+            background: rgba(0,0,0,0.15); backdrop-filter: blur(10px);
+            padding: 0.5rem 2rem; font-size: 0.75rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            position: relative; z-index: 2;
+        }
+        .header-top .dot { width: 6px; height: 6px; background: var(--accent-light); border-radius: 50%; animation: pulse 2s infinite; }
+        .header-main { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 2; }
+        .brand { display: flex; align-items: center; gap: 1rem; }
+        .brand-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; border: 1px solid rgba(255,255,255,0.2); }
+        .brand-text h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+        .brand-text p { font-size: 0.875rem; opacity: 0.8; font-weight: 400; margin-top: 0.25rem; }
+        .header-badge { background: rgba(255,255,255,0.12); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 12px; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; font-weight: 500; }
+        .header-badge .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-light); animation: pulse 2s infinite; }
+        .header-badge .status-dot.loading { background: #fbbf24; animation: spin 1s linear infinite; border-radius: 0; width: 12px; height: 12px; border: 2px solid transparent; border-top-color: white; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.9); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; }
+        @media (max-width: 900px) { .scanner-grid { grid-template-columns: 1fr; } }
+        .card { background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); border: 1px solid var(--border); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-xl); }
+        .card-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to right, #fafafa, #fff); }
+        .card-title { font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; color: var(--text); }
+        .card-title .icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; color: white; }
+        .card-body { padding: 2rem; }
+        .camera-wrapper { position: relative; width: 100%; aspect-ratio: 4/3; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); }
+        #video, #canvas, #preview-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        #video.active, #canvas.active, #preview-img.active { display: block; }
+        .camera-placeholder { text-align: center; color: rgba(255,255,255,0.6); padding: 2rem; }
+        .camera-placeholder .placeholder-icon { width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem; border: 1px solid rgba(255,255,255,0.1); }
+        .camera-placeholder h3 { font-size: 1.25rem; font-weight: 600; color: white; margin-bottom: 0.5rem; }
+        .camera-placeholder p { font-size: 0.875rem; opacity: 0.7; max-width: 280px; margin: 0 auto; }
+        .scan-overlay { position: absolute; inset: 0; pointer-events: none; display: none; }
+        .scan-overlay.active { display: block; }
+        .scan-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75%; height: 65%; border: 2px solid rgba(255,255,255,0.3); border-radius: 24px; }
+        .scan-corners { position: absolute; inset: 0; }
+        .scan-corners::before, .scan-corners::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--accent); border-style: solid; }
+        .scan-corners::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 20px; }
+        .scan-corners::after { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 20px; }
+        .scan-line { position: absolute; top: 0; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent); animation: scanMove 2.5s ease-in-out infinite; }
+        @keyframes scanMove { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+        @media (max-width: 600px) { .controls { grid-template-columns: 1fr; } }
+        .btn { padding: 0.875rem 1.25rem; border: none; border-radius: 12px; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); }
+        .btn:active:not(:disabled) { transform: translateY(0); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; box-shadow: 0 4px 14px rgba(26, 95, 63, 0.3); }
+        .btn-primary:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(26, 95, 63, 0.4); }
+        .btn-secondary { background: #f1f5f9; color: var(--text); border: 2px solid var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: #e2e8f0; border-color: #cbd5e1; }
+        .btn-danger { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; }
+        .btn-danger:hover:not(:disabled) { box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3); }
+        .file-input-wrapper { position: relative; overflow: hidden; }
+        .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
+        .results-content { min-height: 400px; display: flex; flex-direction: column; }
+        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--text-muted); padding: 3rem 2rem; }
+        .empty-state .empty-icon { width: 100px; height: 100px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1.5rem; }
+        .empty-state h3 { font-size: 1.25rem; color: var(--text); margin-bottom: 0.5rem; font-weight: 600; }
+        .loading-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; flex: 1; }
+        .loading-state.active { display: flex; }
+        .loader { width: 64px; height: 64px; position: relative; }
+        .loader::before, .loader::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 3px solid transparent; }
+        .loader::before { border-top-color: var(--primary); animation: spin 1s linear infinite; }
+        .loader::after { border: 3px solid var(--border); }
+        .loading-text { margin-top: 1.5rem; font-size: 1rem; color: var(--text-light); font-weight: 500; }
+        .loading-sub { margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted); }
+        .prediction-result { display: none; animation: fadeInUp 0.6s ease-out; }
+        .prediction-result.active { display: block; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .prediction-hero { text-align: center; padding: 2rem 0 2.5rem; border-bottom: 1px solid var(--border); position: relative; }
+        .prediction-hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 2px; }
+        .crop-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; margin: 0 auto 1.25rem; box-shadow: 0 8px 24px rgba(26, 95, 63, 0.15); border: 4px solid white; }
+        .prediction-name { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem; }
+        .prediction-scientific { font-size: 0.9375rem; color: var(--text-light); font-style: italic; margin-bottom: 1rem; }
+        .confidence-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: var(--primary); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; border: 1px solid #a7f3d0; }
+        .confidence-bar-wrapper { margin-top: 1.25rem; padding: 0 1rem; }
+        .confidence-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+        .confidence-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%); border-radius: 5px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); width: 0%; }
+        .price-section { margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-radius: var(--radius); border: 1px solid #fde047; position: relative; overflow: hidden; }
+        .price-section::before { content: '💰'; position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.08; transform: rotate(-15deg); }
+        .price-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .price-header h4 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #92400e; font-weight: 700; }
+        .dti-badge { background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media (max-width: 600px) { .price-grid { grid-template-columns: 1fr; } }
+        .price-item { background: white; padding: 1.25rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow-sm); border: 1px solid #fef08a; }
+        .price-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600; }
+        .price-value { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+        .price-unit { font-size: 0.875rem; color: var(--text-light); font-weight: 500; }
+        .price-trend { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 6px; }
+        .price-trend.up { color: var(--danger); background: #fef2f2; }
+        .price-trend.down { color: var(--success); background: #ecfdf5; }
+        .price-trend.stable { color: var(--text-light); background: #f1f5f9; }
+        .price-note { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #fde047; font-size: 0.75rem; color: #92400e; text-align: center; font-style: italic; }
+        .crop-info-section { margin-top: 1.5rem; }
+        .section-label { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-card { background: #f8fafc; padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid var(--border); transition: all 0.2s; }
+        .info-card:hover { background: #f1f5f9; transform: translateX(4px); }
+        .info-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.375rem; font-weight: 600; }
+        .info-value { font-weight: 600; color: var(--text); font-size: 0.9375rem; }
+        .alt-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .alt-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 0.75rem; transition: all 0.2s; cursor: pointer; }
+        .alt-item:hover { background: #f1f5f9; transform: translateX(4px); }
+        .alt-rank { width: 36px; height: 36px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: var(--primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .alt-info { flex: 1; }
+        .alt-name { font-weight: 600; font-size: 0.9375rem; color: var(--text); }
+        .alt-bar-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 0.375rem; overflow: hidden; }
+        .alt-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary-light), var(--primary)); border-radius: 3px; transition: width 0.8s ease-out; width: 0%; }
+        .alt-percent { font-weight: 700; color: var(--primary); font-size: 0.9375rem; }
+        .classification-section { margin-top: 3rem; }
+        .class-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); }
+        .class-badge { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .class-title-group { flex: 1; }
+        .class-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--text); }
+        .class-subtitle { font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem; }
+        .class-count { background: var(--primary); color: white; padding: 0.375rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 700; }
+        .crop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .crop-card { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); transition: all 0.3s ease; cursor: pointer; }
+        .crop-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-xl); }
+        .crop-image { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
+        .crop-image::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.05), transparent); }
+        .crop-details { padding: 1.25rem; }
+        .crop-name { font-weight: 700; font-size: 1.125rem; margin-bottom: 0.25rem; color: var(--text); }
+        .crop-scientific { font-size: 0.8125rem; color: var(--text-light); font-style: italic; margin-bottom: 0.75rem; }
+        .crop-price-tag { display: inline-flex; align-items: center; gap: 0.25rem; background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); color: #92400e; padding: 0.375rem 0.875rem; border-radius: 8px; font-size: 0.875rem; font-weight: 700; border: 1px solid #fde047; }
+        .crop-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+        .tag { background: #f1f5f9; color: var(--text-light); padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .family-solanaceae .class-badge { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .family-solanaceae .crop-image { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%); }
+        .family-convolvulaceae .class-badge { background: linear-gradient(135deg, #ffedd5, #fed7aa); }
+        .family-convolvulaceae .crop-image { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 50%, #fb923c 100%); }
+        .family-apiaceae .class-badge { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+        .family-apiaceae .crop-image { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%); }
+        .family-euphorbiaceae .class-badge { background: linear-gradient(135deg, #ecfccb, #d9f99d); }
+        .family-euphorbiaceae .crop-image { background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 50%, #a3e635 100%); }
+        .family-araceae .class-badge { background: linear-gradient(135deg, #ccfbf1, #99f6e4); }
+        .family-araceae .crop-image { background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 50%, #5eead4 100%); }
+        .family-dioscoreaceae .class-badge { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); }
+        .family-dioscoreaceae .crop-image { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #a5b4fc 100%); }
+        .family-zingiberaceae .class-badge { background: linear-gradient(135deg, #fef9c3, #fde047); }
+        .family-zingiberaceae .crop-image { background: linear-gradient(135deg, #fef9c3 0%, #fde047 50%, #eab308 100%); }
+        .family-amaranthaceae .class-badge { background: linear-gradient(135deg, #fecaca, #fca5a5); }
+        .family-amaranthaceae .crop-image { background: linear-gradient(135deg, #fecaca 0%, #fca5a5 50%, #f87171 100%); }
+        .family-brassicaceae .class-badge { background: linear-gradient(135deg, #f3e8ff, #d8b4fe); }
+        .family-brassicaceae .crop-image { background: linear-gradient(135deg, #f3e8ff 0%, #d8b4fe 50%, #c084fc 100%); }
+        .family-fabaceae .class-badge { background: linear-gradient(135deg, #fed7aa, #fdba74); }
+        .family-fabaceae .crop-image { background: linear-gradient(135deg, #fed7aa 0%, #fdba74 50%, #fb923c 100%); }
+        .family-nelumbonaceae .class-badge { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); }
+        .family-nelumbonaceae .crop-image { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%); }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--card); color: var(--text); padding: 1rem 1.5rem; border-radius: 14px; box-shadow: var(--shadow-xl); border-left: 4px solid var(--success); transform: translateX(400px); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; display: flex; align-items: center; gap: 0.875rem; font-weight: 500; max-width: 400px; }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--danger); }
+        .footer { margin-top: 4rem; padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; border-top: 1px solid var(--border); }
+        .footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        #process-canvas { display: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-top">
+            <span class="dot"></span>
+            <span>DTI Price Monitoring Integration Active — Prices updated based on DA/DTI market surveillance</span>
+        </div>
+        <div class="header-main">
+            <div class="brand">
+                <div class="brand-icon">🥔</div>
+                <div class="brand-text">
+                    <h1>ComPrice Scanner</h1>
+                    <p>Root Crop Identification & DTI Price Monitor</p>
+                </div>
+            </div>
+            <div class="header-badge" id="model-status">
+                <span class="status-dot loading" id="status-dot"></span>
+                <span id="status-text">Loading AI Model...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="scanner-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon">📷</span>
+                        Scanner
+                    </div>
+                    <span style="font-size: 0.875rem; color: var(--text-muted);" id="camera-status">Ready</span>
+                </div>
+                <div class="card-body">
+                    <div class="camera-wrapper" id="camera-wrapper">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <img id="preview-img" alt="Preview">
+                        <div class="camera-placeholder" id="placeholder">
+                            <div class="placeholder-icon">📸</div>
+                            <h3>Camera Off</h3>
+                            <p>Start camera or upload an image to scan and identify root crops with DTI price data</p>
+                        </div>
+                        <div class="scan-overlay" id="scan-overlay">
+                            <div class="scan-frame">
+                                <div class="scan-corners"></div>
+                                <div class="scan-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-primary" id="btn-camera" onclick="toggleCamera()">
+                            <span>📹</span> Start Camera
+                        </button>
+                        <button class="btn btn-secondary" id="btn-snap" onclick="captureImage()" disabled>
+                            <span>📸</span> Capture
+                        </button>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">
+                                <span>📁</span> Upload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">🔍</span>
+                        Analysis Results
+                    </div>
+                </div>
+                <div class="results-content" id="results-content">
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-icon">🌱</div>
+                        <h3>No Analysis Yet</h3>
+                        <p>Capture or upload an image to identify the root crop and see DTI-monitored market prices</p>
+                    </div>
+                    <div class="loading-state" id="loading-state">
+                        <div class="loader"></div>
+                        <div class="loading-text">Analyzing with AI...</div>
+                        <div class="loading-sub">Matching against 14 root crop varieties across 11 botanical families</div>
+                    </div>
+                    <div class="prediction-result" id="prediction-result">
+                        <div class="prediction-hero">
+                            <div class="crop-avatar" id="prediction-icon">🥔</div>
+                            <div class="prediction-name" id="prediction-name">Potato</div>
+                            <div class="prediction-scientific" id="prediction-scientific">Solanum tuberosum</div>
+                            <span class="confidence-pill">
+                                <span>✓</span>
+                                <span id="prediction-confidence">Confidence: 94.2%</span>
+                            </span>
+                            <div class="confidence-bar-wrapper">
+                                <div class="confidence-bar-bg">
+                                    <div class="confidence-bar-fill" id="confidence-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="price-section" id="price-section">
+                            <div class="price-header">
+                                <h4>💰 DTI Price Monitor</h4>
+                                <span class="dti-badge">LIVE</span>
+                            </div>
+                            <div class="price-grid" id="price-grid"></div>
+                            <div class="price-note">
+                                Prices based on DA/DTI market surveillance (Palengke/Wet Market). SRP may vary by region.
+                            </div>
+                        </div>
+                        <div class="crop-info-section">
+                            <div class="section-label">📋 Crop Information</div>
+                            <div class="info-grid" id="info-grid"></div>
+                        </div>
+                        <div class="alt-section" id="alt-section">
+                            <div class="section-label">🔎 Other Possibilities</div>
+                            <div id="alt-predictions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="classification-section" id="classification-section">
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>ComPrice Scanner — DTI Price Monitor Integration | Data sourced from DA/DTI market surveillance</p>
+        <p style="margin-top: 0.5rem; font-size: 0.8125rem;">Prices are indicative based on regional palengke monitoring. Actual prices may vary.</p>
+    </footer>
+
+    <div class="toast" id="toast">
+        <span id="toast-icon">✅</span>
+        <span id="toast-message">Message</span>
+    </div>
+    <canvas id="process-canvas"></canvas>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW error', err));
+        }
+    </script>
+</body>
+</html>
