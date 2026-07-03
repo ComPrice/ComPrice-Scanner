@@ -70,6 +70,34 @@
         .card-title { font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; color: var(--text); }
         .card-title .icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; color: white; }
         .card-body { padding: 2rem; }
+
+        /* ===== CROP SCANNER WIDGET STYLES (NEW) ===== */
+        .crop-scanner { max-width: 100%; margin: 0 auto; padding: 0; font-family: inherit; }
+        .crop-scanner .upload-area { border: 2px dashed #bdc3c7; border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; background: #f8fafc; }
+        .crop-scanner .upload-area:hover, .crop-scanner .upload-area.dragover { border-color: var(--primary); background: #f0f9f4; }
+        .crop-scanner .upload-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+        .crop-scanner .preview-image { max-width: 100%; max-height: 250px; border-radius: 8px; display: block; margin: 0 auto; }
+        .crop-scanner .scanner-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .crop-scanner .btn-primary, .crop-scanner .btn-secondary { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .crop-scanner .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; }
+        .crop-scanner .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(26, 95, 63, 0.3); }
+        .crop-scanner .btn-primary:disabled { background: #bdc3c7; cursor: not-allowed; opacity: 0.6; }
+        .crop-scanner .btn-secondary { background: #f1f5f9; color: var(--text); border: 2px solid var(--border); }
+        .crop-scanner .btn-secondary:hover { background: #e2e8f0; }
+        .crop-scanner .crop-results { margin-top: 20px; }
+        .crop-scanner .crop-results h3 { margin: 0 0 15px; color: var(--text); font-size: 18px; font-weight: 700; }
+        .crop-scanner .crop-prediction { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; background: #f8fafc; border-left: 4px solid #bdc3c7; transition: all 0.2s; }
+        .crop-scanner .crop-prediction.valid { border-left-color: var(--success); background: #ecfdf5; }
+        .crop-scanner .crop-prediction.top { border-left-width: 6px; }
+        .crop-scanner .crop-name { font-weight: 600; color: var(--text); text-transform: capitalize; }
+        .crop-scanner .crop-confidence { display: flex; align-items: center; gap: 10px; min-width: 120px; }
+        .crop-scanner .confidence-bar { height: 8px; background: var(--success); border-radius: 4px; min-width: 20px; transition: width 0.5s ease; }
+        .crop-scanner .crop-confidence span { font-size: 14px; color: var(--text-light); min-width: 50px; text-align: right; }
+        .crop-scanner .inference-time { text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 10px; }
+        .crop-scanner .crop-error { color: var(--danger); padding: 10px; background: #fef2f2; border-radius: 8px; margin-top: 10px; }
+        .crop-scanner .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; z-index: 10; }
+        .crop-scanner .spinner { width: 40px; height: 40px; border: 4px solid #ecf0f1; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+
         .camera-wrapper { position: relative; width: 100%; aspect-ratio: 4/3; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: var(--radius); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); }
         #video, #canvas, #preview-img { width: 100%; height: 100%; object-fit: cover; display: none; }
         #video.active, #canvas.active, #preview-img.active { display: block; }
@@ -326,6 +354,22 @@
             </div>
         </div>
 
+        <!-- NEW: Advanced Crop Identifier Section -->
+        <section class="classification-section" style="margin-bottom: 3rem;">
+            <div class="class-header">
+                <div class="class-badge" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">🌾</div>
+                <div class="class-title-group">
+                    <div class="class-title">Advanced Crop Identifier</div>
+                    <div class="class-subtitle">AI-powered crop identification with confidence scoring via TensorFlow model</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div id="crop-scanner-widget"></div>
+                </div>
+            </div>
+        </section>
+
         <section class="classification-section" id="classification-section">
         </section>
     </main>
@@ -342,7 +386,13 @@
     <canvas id="process-canvas"></canvas>
 
     <script src="app.js"></script>
+    <script src="crop-scanner.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'http://localhost:5000';
+            new CropScannerWidget('crop-scanner-widget', API_URL);
+        });
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then(reg => console.log('SW registered'))
