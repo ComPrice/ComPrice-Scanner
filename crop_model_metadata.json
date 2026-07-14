@@ -1,0 +1,68 @@
+{
+  "img_size": [
+    300,
+    300
+  ],
+  "num_classes": 11,
+  "backbone": "efficientnetb3",
+  "class_indices": {
+    "Carrot": 0,
+    "Cassava": 1,
+    "Ginger": 2,
+    "Onion": 3,
+    "Peanut": 4,
+    "Potato": 5,
+    "Raddish": 6,
+    "Sweet Potato": 7,
+    "Taro": 8,
+    "Turmeric": 9,
+    "Ube": 10
+  },
+  "idx_to_class": {
+    "0": "Carrot",
+    "1": "Cassava",
+    "2": "Ginger",
+    "3": "Onion",
+    "4": "Peanut",
+    "5": "Potato",
+    "6": "Raddish",
+    "7": "Sweet Potato",
+    "8": "Taro",
+    "9": "Turmeric",
+    "10": "Ube"
+  },
+  "crop_classes": [
+    "Carrot",
+    "Cassava",
+    "Ginger",
+    "Onion",
+    "Peanut",
+    "Potato",
+    "Raddish",
+    "Sweet Potato",
+    "Taro",
+    "Turmeric",
+    "Ube"
+  ],
+  "model_version": "1.0.0",
+  "input_shape": [
+    1,
+    300,
+    300,
+    3
+  ],
+  "preprocessing": {
+    "rescale": 1.0,
+    "normalize": true,
+    "mean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "std": [
+      255.0,
+      255.0,
+      255.0
+    ]
+  }
+}
