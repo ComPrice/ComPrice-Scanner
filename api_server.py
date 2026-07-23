@@ -8,6 +8,7 @@ import io
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image as keras_image
 import time
+import base64
 
 app = Flask(__name__)
 CORS(app)

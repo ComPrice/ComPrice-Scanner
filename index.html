@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ComPrice Scanner — DTI Price Monitor</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -45,7 +43,6 @@
             overflow-x: hidden;
         }
 
-        /* ===== HEADER ===== */
         .header {
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
             color: white;
@@ -62,17 +59,6 @@
             width: 600px;
             height: 600px;
             background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
             border-radius: 50%;
         }
 
@@ -182,14 +168,12 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ===== MAIN CONTAINER ===== */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
 
-        /* ===== SCANNER SECTION ===== */
         .scanner-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -203,7 +187,6 @@
             }
         }
 
-        /* ===== CARDS ===== */
         .card {
             background: var(--card);
             border-radius: var(--radius-lg);
@@ -252,7 +235,6 @@
             padding: 2rem;
         }
 
-        /* ===== CAMERA ===== */
         .camera-wrapper {
             position: relative;
             width: 100%;
@@ -310,7 +292,6 @@
             margin: 0 auto;
         }
 
-        /* Scanner overlay */
         .scan-overlay {
             position: absolute;
             inset: 0;
@@ -379,7 +360,6 @@
             100% { top: 100%; opacity: 0; }
         }
 
-        /* ===== CONTROLS ===== */
         .controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -461,7 +441,6 @@
             left: -9999px;
         }
 
-        /* ===== RESULTS ===== */
         .results-content {
             min-height: 400px;
             display: flex;
@@ -498,7 +477,6 @@
             font-weight: 600;
         }
 
-        /* Loading */
         .loading-state {
             display: none;
             flex-direction: column;
@@ -548,7 +526,6 @@
             color: var(--text-muted);
         }
 
-        /* ===== PREDICTION RESULT ===== */
         .prediction-result {
             display: none;
             animation: fadeInUp 0.6s ease-out;
@@ -563,7 +540,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Main prediction hero */
         .prediction-hero {
             text-align: center;
             padding: 2rem 0 2.5rem;
@@ -646,7 +622,6 @@
             width: 0%;
         }
 
-        /* ===== PRICE SECTION (DTI) ===== */
         .price-section {
             margin-top: 1.5rem;
             padding: 1.5rem;
@@ -769,7 +744,6 @@
             font-style: italic;
         }
 
-        /* ===== CROP INFO ===== */
         .crop-info-section {
             margin-top: 1.5rem;
         }
@@ -826,7 +800,6 @@
             font-size: 0.9375rem;
         }
 
-        /* ===== ALTERNATIVE PREDICTIONS ===== */
         .alt-section {
             margin-top: 1.5rem;
             padding-top: 1.5rem;
@@ -898,7 +871,6 @@
             font-size: 0.9375rem;
         }
 
-        /* ===== CROP DATABASE ===== */
         .database-section {
             margin-top: 3rem;
         }
@@ -1013,7 +985,6 @@
             font-weight: 600;
         }
 
-        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -1042,7 +1013,6 @@
             border-left-color: var(--danger);
         }
 
-        /* ===== FOOTER ===== */
         .footer {
             margin-top: 4rem;
             padding: 2rem;
@@ -1058,14 +1028,12 @@
             font-weight: 600;
         }
 
-        /* Hidden */
         #process-canvas {
             display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="header-top">
             <span class="dot"></span>
@@ -1081,16 +1049,13 @@
             </div>
             <div class="header-badge" id="model-status">
                 <span class="status-dot loading" id="status-dot"></span>
-                <span id="status-text">Loading AI Model...</span>
+                <span id="status-text">Connecting to API...</span>
             </div>
         </div>
     </header>
 
-    <!-- Main -->
     <main class="container">
-        <!-- Scanner Grid -->
         <div class="scanner-grid">
-            <!-- Camera Card -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
@@ -1134,7 +1099,6 @@
                 </div>
             </div>
 
-            <!-- Results Card -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
@@ -1143,21 +1107,18 @@
                     </div>
                 </div>
                 <div class="results-content" id="results-content">
-                    <!-- Empty State -->
                     <div class="empty-state" id="empty-state">
                         <div class="empty-icon">🌱</div>
                         <h3>No Analysis Yet</h3>
                         <p>Capture or upload an image to identify the root crop and see DTI-monitored market prices</p>
                     </div>
 
-                    <!-- Loading -->
                     <div class="loading-state" id="loading-state">
                         <div class="loader"></div>
                         <div class="loading-text">Analyzing with AI...</div>
-                        <div class="loading-sub">Matching against 14 root crop varieties</div>
+                        <div class="loading-sub">Using your trained crop model</div>
                     </div>
 
-                    <!-- Prediction Result -->
                     <div class="prediction-result" id="prediction-result">
                         <div class="prediction-hero">
                             <div class="crop-avatar" id="prediction-icon">🥔</div>
@@ -1174,29 +1135,22 @@
                             </div>
                         </div>
 
-                        <!-- DTI Price Section -->
                         <div class="price-section" id="price-section">
                             <div class="price-header">
                                 <h4>💰 DTI Price Monitor</h4>
                                 <span class="dti-badge">LIVE</span>
                             </div>
-                            <div class="price-grid" id="price-grid">
-                                <!-- Filled dynamically -->
-                            </div>
+                            <div class="price-grid" id="price-grid"></div>
                             <div class="price-note">
                                 Prices based on DA/DTI market surveillance (Palengke/Wet Market). SRP may vary by region.
                             </div>
                         </div>
 
-                        <!-- Crop Info -->
                         <div class="crop-info-section">
                             <div class="section-label">📋 Crop Information</div>
-                            <div class="info-grid" id="info-grid">
-                                <!-- Filled dynamically -->
-                            </div>
+                            <div class="info-grid" id="info-grid"></div>
                         </div>
 
-                        <!-- Alternatives -->
                         <div class="alt-section" id="alt-section">
                             <div class="section-label">🔎 Other Possibilities</div>
                             <div id="alt-predictions"></div>
@@ -1206,7 +1160,6 @@
             </div>
         </div>
 
-        <!-- Database Section -->
         <section class="database-section">
             <div class="section-header">
                 <div>
@@ -1218,67 +1171,23 @@
         </section>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
         <p>ComPrice Scanner — DTI Price Monitor Integration | Data sourced from DA/DTI market surveillance</p>
         <p style="margin-top: 0.5rem; font-size: 0.8125rem;">Prices are indicative based on regional palengke monitoring. Actual prices may vary.</p>
     </footer>
 
-    <!-- Toast -->
     <div class="toast" id="toast">
         <span id="toast-icon">✅</span>
         <span id="toast-message">Message</span>
     </div>
 
-    <!-- Hidden processing canvas -->
     <canvas id="process-canvas"></canvas>
 
     <script>
-        // ============================================================
-        // ROOT CROP DATABASE WITH DTI PRICE DATA
-        // Prices based on DA/DTI market surveillance (PHP per unit)
-        // ============================================================
+        // API Configuration
+        const API_BASE_URL = 'http://192.168.1.18:5000';
+        
         const ROOT_CROPS = {
-            'potato': {
-                name: 'Potato',
-                scientific: 'Solanum tuberosum',
-                icon: '🥔',
-                family: 'Solanaceae',
-                origin: 'Andes Mountains, South America',
-                season: 'Cool season',
-                nutrition: 'Vitamin C, Potassium, B6',
-                uses: 'Boiling, baking, frying, mashing',
-                description: 'Starchy tuber and a staple food crop worldwide.',
-                prices: {
-                    retail: 65,
-                    wholesale: 48,
-                    farmgate: 32
-                },
-                unit: 'kg',
-                trend: 'stable',
-                trendValue: 0,
-                region: 'NCR / Region III'
-            },
-            'sweet potato': {
-                name: 'Sweet Potato',
-                scientific: 'Ipomoea batatas',
-                icon: '🍠',
-                family: 'Convolvulaceae',
-                origin: 'Central/South America',
-                season: 'Warm season',
-                nutrition: 'Vitamin A, Fiber, Manganese',
-                uses: 'Baking, fries, casseroles, pies',
-                description: 'Sweet-tasting tuberous roots, highly nutritious.',
-                prices: {
-                    retail: 55,
-                    wholesale: 40,
-                    farmgate: 28
-                },
-                unit: 'kg',
-                trend: 'down',
-                trendValue: -3,
-                region: 'Region IV-A / VI'
-            },
             'carrot': {
                 name: 'Carrot',
                 scientific: 'Daucus carota',
@@ -1289,11 +1198,7 @@
                 nutrition: 'Vitamin A, K1, Potassium',
                 uses: 'Raw, juicing, cooking, baking',
                 description: 'Orange root vegetable rich in beta-carotene.',
-                prices: {
-                    retail: 85,
-                    wholesale: 62,
-                    farmgate: 42
-                },
+                prices: { retail: 85, wholesale: 62, farmgate: 42 },
                 unit: 'kg',
                 trend: 'up',
                 trendValue: 5,
@@ -1309,55 +1214,11 @@
                 nutrition: 'Carbohydrates, Vitamin C',
                 uses: 'Flour, tapioca, boiling, frying',
                 description: 'Major staple crop in tropical regions.',
-                prices: {
-                    retail: 38,
-                    wholesale: 28,
-                    farmgate: 18
-                },
+                prices: { retail: 38, wholesale: 28, farmgate: 18 },
                 unit: 'kg',
                 trend: 'stable',
                 trendValue: 0,
                 region: 'Region VI / XII'
-            },
-            'taro': {
-                name: 'Taro',
-                scientific: 'Colocasia esculenta',
-                icon: '🍠',
-                family: 'Araceae',
-                origin: 'Southeast Asia/India',
-                season: 'Tropical, year-round',
-                nutrition: 'Fiber, Vitamin E, Potassium',
-                uses: 'Poi, chips, boiling, steaming',
-                description: 'Tropical plant grown for its edible corms.',
-                prices: {
-                    retail: 72,
-                    wholesale: 55,
-                    farmgate: 38
-                },
-                unit: 'kg',
-                trend: 'up',
-                trendValue: 4,
-                region: 'Region XI / CARAGA'
-            },
-            'yam': {
-                name: 'Yam',
-                scientific: 'Dioscorea spp.',
-                icon: '🍠',
-                family: 'Dioscoreaceae',
-                origin: 'Africa/Asia',
-                season: 'Tropical',
-                nutrition: 'Vitamin C, Fiber, Potassium',
-                uses: 'Boiling, roasting, frying, pounding',
-                description: 'Starchy tuber, distinct from sweet potatoes.',
-                prices: {
-                    retail: 78,
-                    wholesale: 58,
-                    farmgate: 40
-                },
-                unit: 'kg',
-                trend: 'stable',
-                trendValue: 0,
-                region: 'Region XI / BARMM'
             },
             'ginger': {
                 name: 'Ginger',
@@ -1369,14 +1230,106 @@
                 nutrition: 'Gingerol, Antioxidants',
                 uses: 'Spice, tea, medicine, cooking',
                 description: 'Aromatic spice with medicinal properties.',
-                prices: {
-                    retail: 120,
-                    wholesale: 90,
-                    farmgate: 65
-                },
+                prices: { retail: 120, wholesale: 90, farmgate: 65 },
                 unit: 'kg',
                 trend: 'up',
                 trendValue: 8,
+                region: 'Region XI / CARAGA'
+            },
+            'onion': {
+                name: 'Onion',
+                scientific: 'Allium cepa',
+                icon: '🧅',
+                family: 'Amaryllidaceae',
+                origin: 'Central Asia',
+                season: 'Cool season',
+                nutrition: 'Vitamin C, B6, Folate',
+                uses: 'Cooking, salads, pickling',
+                description: 'Bulb vegetable used worldwide in cooking.',
+                prices: { retail: 95, wholesale: 72, farmgate: 50 },
+                unit: 'kg',
+                trend: 'up',
+                trendValue: 6,
+                region: 'Region I / III'
+            },
+            'peanut': {
+                name: 'Peanut',
+                scientific: 'Arachis hypogaea',
+                icon: '🥜',
+                family: 'Fabaceae',
+                origin: 'South America',
+                season: 'Warm season',
+                nutrition: 'Protein, Niacin, Folate',
+                uses: 'Snacks, oil, butter, cooking',
+                description: 'Legume grown mainly for its edible seeds.',
+                prices: { retail: 110, wholesale: 85, farmgate: 60 },
+                unit: 'kg',
+                trend: 'stable',
+                trendValue: 0,
+                region: 'Region I / III'
+            },
+            'potato': {
+                name: 'Potato',
+                scientific: 'Solanum tuberosum',
+                icon: '🥔',
+                family: 'Solanaceae',
+                origin: 'Andes Mountains, South America',
+                season: 'Cool season',
+                nutrition: 'Vitamin C, Potassium, B6',
+                uses: 'Boiling, baking, frying, mashing',
+                description: 'Starchy tuber and a staple food crop worldwide.',
+                prices: { retail: 65, wholesale: 48, farmgate: 32 },
+                unit: 'kg',
+                trend: 'stable',
+                trendValue: 0,
+                region: 'NCR / Region III'
+            },
+            'raddish': {
+                name: 'Raddish',
+                scientific: 'Raphanus sativus',
+                icon: '⚪',
+                family: 'Brassicaceae',
+                origin: 'Southeast Asia',
+                season: 'Cool season',
+                nutrition: 'Vitamin C, Fiber, Folate',
+                uses: 'Raw, salads, pickling, cooking',
+                description: 'Fast-growing root vegetable with peppery taste.',
+                prices: { retail: 45, wholesale: 32, farmgate: 22 },
+                unit: 'kg',
+                trend: 'down',
+                trendValue: -2,
+                region: 'Benguet / Region III'
+            },
+            'sweet potato': {
+                name: 'Sweet Potato',
+                scientific: 'Ipomoea batatas',
+                icon: '🍠',
+                family: 'Convolvulaceae',
+                origin: 'Central/South America',
+                season: 'Warm season',
+                nutrition: 'Vitamin A, Fiber, Manganese',
+                uses: 'Baking, fries, casseroles, pies',
+                description: 'Sweet-tasting tuberous roots, highly nutritious.',
+                prices: { retail: 55, wholesale: 40, farmgate: 28 },
+                unit: 'kg',
+                trend: 'down',
+                trendValue: -3,
+                region: 'Region IV-A / VI'
+            },
+            'taro': {
+                name: 'Taro',
+                scientific: 'Colocasia esculenta',
+                icon: '🍠',
+                family: 'Araceae',
+                origin: 'Southeast Asia/India',
+                season: 'Tropical, year-round',
+                nutrition: 'Fiber, Vitamin E, Potassium',
+                uses: 'Poi, chips, boiling, steaming',
+                description: 'Tropical plant grown for its edible corms.',
+                prices: { retail: 72, wholesale: 55, farmgate: 38 },
+                unit: 'kg',
+                trend: 'up',
+                trendValue: 4,
                 region: 'Region XI / CARAGA'
             },
             'turmeric': {
@@ -1389,147 +1342,35 @@
                 nutrition: 'Curcumin, Antioxidants',
                 uses: 'Spice, dye, medicine, curry',
                 description: 'Bright yellow spice with anti-inflammatory properties.',
-                prices: {
-                    retail: 180,
-                    wholesale: 135,
-                    farmgate: 95
-                },
+                prices: { retail: 180, wholesale: 135, farmgate: 95 },
                 unit: 'kg',
                 trend: 'up',
                 trendValue: 6,
                 region: 'Region XI / XII'
             },
-            'beetroot': {
-                name: 'Beetroot',
-                scientific: 'Beta vulgaris',
-                icon: '🔴',
-                family: 'Amaranthaceae',
-                origin: 'Mediterranean',
-                season: 'Cool season',
-                nutrition: 'Folate, Manganese, Nitrates',
-                uses: 'Salads, juicing, pickling, roasting',
-                description: 'Deep red root vegetable with earthy flavor.',
-                prices: {
-                    retail: 95,
-                    wholesale: 72,
-                    farmgate: 50
-                },
-                unit: 'kg',
-                trend: 'stable',
-                trendValue: 0,
-                region: 'Benguet / Region I'
-            },
-            'radish': {
-                name: 'Radish',
-                scientific: 'Raphanus sativus',
-                icon: '⚪',
-                family: 'Brassicaceae',
+            'ube': {
+                name: 'Ube',
+                scientific: 'Dioscorea alata',
+                icon: '🟣',
+                family: 'Dioscoreaceae',
                 origin: 'Southeast Asia',
-                season: 'Cool season',
-                nutrition: 'Vitamin C, Fiber, Folate',
-                uses: 'Raw, salads, pickling, cooking',
-                description: 'Fast-growing root vegetable with peppery taste.',
-                prices: {
-                    retail: 45,
-                    wholesale: 32,
-                    farmgate: 22
-                },
-                unit: 'kg',
-                trend: 'down',
-                trendValue: -2,
-                region: 'Benguet / Region III'
-            },
-            'turnip': {
-                name: 'Turnip',
-                scientific: 'Brassica rapa',
-                icon: '⚪',
-                family: 'Brassicaceae',
-                origin: 'Northern Europe',
-                season: 'Cool season',
-                nutrition: 'Vitamin C, Fiber, Calcium',
-                uses: 'Roasting, mashing, soups, raw',
-                description: 'Root vegetable with white and purple coloring.',
-                prices: {
-                    retail: 58,
-                    wholesale: 42,
-                    farmgate: 28
-                },
-                unit: 'kg',
-                trend: 'stable',
-                trendValue: 0,
-                region: 'Benguet / Region I'
-            },
-            'parsnip': {
-                name: 'Parsnip',
-                scientific: 'Pastinaca sativa',
-                icon: '🟡',
-                family: 'Apiaceae',
-                origin: 'Eurasia',
-                season: 'Cool season',
-                nutrition: 'Vitamin C, K, Folate',
-                uses: 'Roasting, soups, mashing, frying',
-                description: 'Cream-colored root with sweet, nutty flavor.',
-                prices: {
-                    retail: 110,
-                    wholesale: 82,
-                    farmgate: 58
-                },
-                unit: 'kg',
-                trend: 'stable',
-                trendValue: 0,
-                region: 'Benguet / CAR'
-            },
-            'jicama': {
-                name: 'Jicama',
-                scientific: 'Pachyrhizus erosus',
-                icon: '🟤',
-                family: 'Fabaceae',
-                origin: 'Mexico/Central America',
-                season: 'Warm season',
-                nutrition: 'Vitamin C, Fiber, Potassium',
-                uses: 'Raw, salads, slaws, stir-fry',
-                description: 'Crisp, sweet tuber with brown skin.',
-                prices: {
-                    retail: 88,
-                    wholesale: 65,
-                    farmgate: 45
-                },
+                season: 'Tropical',
+                nutrition: 'Vitamin C, Fiber, Anthocyanins',
+                uses: 'Desserts, jams, ice cream, cakes',
+                description: 'Purple yam popular in Filipino desserts.',
+                prices: { retail: 95, wholesale: 72, farmgate: 50 },
                 unit: 'kg',
                 trend: 'up',
-                trendValue: 3,
-                region: 'Region IV-A / III'
-            },
-            'lotus root': {
-                name: 'Lotus Root',
-                scientific: 'Nelumbo nucifera',
-                icon: '⚪',
-                family: 'Nelumbonaceae',
-                origin: 'Asia',
-                season: 'Summer-Fall',
-                nutrition: 'Vitamin C, Fiber, Copper',
-                uses: 'Stir-fry, soups, tempura, pickling',
-                description: 'Distinctive lacy-patterned aquatic root.',
-                prices: {
-                    retail: 150,
-                    wholesale: 115,
-                    farmgate: 85
-                },
-                unit: 'kg',
-                trend: 'up',
-                trendValue: 5,
-                region: 'Region III / IV-A'
+                trendValue: 7,
+                region: 'Region IV-A / XI'
             }
         };
 
-        // ============================================================
-        // STATE
-        // ============================================================
-        let model = null;
         let stream = null;
         let isCameraActive = false;
         let currentImage = null;
+        let apiAvailable = false;
 
-        // DOM Elements
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const previewImg = document.getElementById('preview-img');
@@ -1539,30 +1380,34 @@
         const btnSnap = document.getElementById('btn-snap');
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
-        const processCanvas = document.getElementById('process-canvas');
-        const ctx = processCanvas.getContext('2d');
 
-        // ============================================================
-        // INITIALIZATION
-        // ============================================================
         async function init() {
             renderCropDatabase();
+            await checkAPI();
+        }
+
+        async function checkAPI() {
             try {
-                model = await mobilenet.load();
-                statusDot.classList.remove('loading');
-                statusText.textContent = 'AI Model Ready';
-                showToast('✅ AI Model loaded successfully!', false);
+                const response = await fetch(`${API_BASE_URL}/health`, { timeout: 5000 });
+                const data = await response.json();
+                
+                if (data.model_loaded) {
+                    apiAvailable = true;
+                    statusDot.classList.remove('loading');
+                    statusText.textContent = 'API Connected';
+                    showToast('✅ Connected to Crop Prediction API', false);
+                } else {
+                    throw new Error('Model not loaded');
+                }
             } catch (error) {
-                statusText.textContent = 'Model Error';
-                statusDot.style.background = '#ef4444';
-                showToast('❌ Failed to load AI model. Please refresh.', true);
-                console.error(error);
+                apiAvailable = false;
+                statusDot.classList.remove('loading');
+                statusDot.style.background = '#f59e0b';
+                statusText.textContent = 'API Offline';
+                showToast('⚠️ API unavailable. Check if server is running.', true);
             }
         }
 
-        // ============================================================
-        // RENDER CROP DATABASE
-        // ============================================================
         function renderCropDatabase() {
             const grid = document.getElementById('crop-grid');
             grid.innerHTML = Object.values(ROOT_CROPS).map(crop => {
@@ -1588,9 +1433,6 @@
             `}).join('');
         }
 
-        // ============================================================
-        // CAMERA FUNCTIONS
-        // ============================================================
         async function toggleCamera() {
             if (isCameraActive) {
                 stopCamera();
@@ -1658,9 +1500,6 @@
             analyzeImage(canvas);
         }
 
-        // ============================================================
-        // FILE UPLOAD
-        // ============================================================
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1681,12 +1520,9 @@
             reader.readAsDataURL(file);
         }
 
-        // ============================================================
-        // IMAGE ANALYSIS
-        // ============================================================
         async function analyzeImage(imageSource) {
-            if (!model) {
-                showToast('⏳ AI Model still loading...', true);
+            if (!apiAvailable) {
+                showToast('❌ API not available. Start the server first.', true);
                 return;
             }
 
@@ -1695,101 +1531,70 @@
             document.getElementById('loading-state').classList.add('active');
 
             try {
-                await new Promise(r => setTimeout(r, 600));
-                const predictions = await model.classify(imageSource, 5);
-                const mappedResults = mapToRootCrops(predictions);
-                displayResults(mappedResults);
-            } catch (error) {
-                showToast('❌ Analysis failed. Try again.', true);
-                console.error(error);
-            } finally {
-                document.getElementById('loading-state').classList.remove('active');
-            }
-        }
-
-        // ============================================================
-        // MAP TO ROOT CROPS
-        // ============================================================
-        function mapToRootCrops(predictions) {
-            const rootCropKeywords = {
-                'potato': ['potato', 'tuber', 'solanum'],
-                'sweet potato': ['sweet potato', 'yam', 'ipomoea'],
-                'carrot': ['carrot', 'root vegetable', 'daucus'],
-                'cassava': ['cassava', 'manioc', 'tapioca', 'manihot'],
-                'taro': ['taro', 'dasheen', 'colocasia', 'eddoe'],
-                'yam': ['yam', 'dioscorea', 'true yam'],
-                'ginger': ['ginger', 'zingiber', 'root spice'],
-                'turmeric': ['turmeric', 'curcuma', 'yellow ginger'],
-                'beetroot': ['beet', 'beetroot', 'beta vulgaris', 'chard'],
-                'radish': ['radish', 'raphanus', 'daikon'],
-                'turnip': ['turnip', 'brassica rapa', 'rutabaga', 'swede'],
-                'parsnip': ['parsnip', 'pastinaca', 'white carrot'],
-                'jicama': ['jicama', 'yam bean', 'pachyrhizus'],
-                'lotus root': ['lotus', 'nelumbo', 'renkon']
-            };
-
-            let results = [];
-
-            for (const pred of predictions) {
-                const className = pred.className.toLowerCase();
-                let matched = false;
-
-                for (const [cropKey, keywords] of Object.entries(rootCropKeywords)) {
-                    if (keywords.some(kw => className.includes(kw))) {
-                        results.push({
-                            crop: ROOT_CROPS[cropKey],
-                            confidence: pred.probability,
-                            matched: true
-                        });
-                        matched = true;
-                        break;
-                    }
+                let blob;
+                if (imageSource instanceof HTMLCanvasElement) {
+                    blob = await new Promise(resolve => imageSource.toBlob(resolve, 'image/jpeg', 0.9));
+                } else if (imageSource instanceof HTMLImageElement) {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = imageSource.naturalWidth;
+                    tempCanvas.height = imageSource.naturalHeight;
+                    tempCanvas.getContext('2d').drawImage(imageSource, 0, 0);
+                    blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.9));
                 }
 
-                if (!matched && results.length < 3) {
-                    results.push({
-                        crop: {
-                            name: 'Unknown Root Crop',
-                            scientific: 'Unknown species',
+                const formData = new FormData();
+                formData.append('image', blob, 'scan.jpg');
+
+                const response = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                
+                if (!data.success) throw new Error(data.error);
+
+                const results = data.predictions.map(p => {
+                    const cropKey = p.crop.toLowerCase();
+                    return {
+                        crop: ROOT_CROPS[cropKey] || {
+                            name: p.crop,
+                            scientific: 'Unknown',
                             icon: '🌱',
                             family: 'Unknown',
                             origin: 'Unknown',
                             season: 'Unknown',
-                            nutrition: 'Analysis pending',
+                            nutrition: 'Unknown',
                             uses: 'Unknown',
-                            description: 'Unable to identify specific root crop. Try a clearer image.',
+                            description: 'No data available',
                             prices: { retail: 0, wholesale: 0, farmgate: 0 },
                             unit: 'kg',
                             trend: 'stable',
                             trendValue: 0,
                             region: 'Unknown'
                         },
-                        confidence: pred.probability * 0.3,
-                        matched: false
-                    });
-                }
-            }
+                        confidence: p.confidence,
+                        matched: p.is_valid
+                    };
+                });
 
-            if (results.length === 0 || !results[0].matched) {
-                results = [
-                    { crop: ROOT_CROPS['potato'], confidence: 0.35, matched: true },
-                    { crop: ROOT_CROPS['carrot'], confidence: 0.25, matched: true },
-                    { crop: ROOT_CROPS['sweet potato'], confidence: 0.20, matched: true }
-                ];
-            }
+                displayResults(results);
 
-            return results;
+            } catch (error) {
+                showToast('❌ ' + error.message, true);
+                console.error(error);
+            } finally {
+                document.getElementById('loading-state').classList.remove('active');
+            }
         }
 
-        // ============================================================
-        // DISPLAY RESULTS
-        // ============================================================
         function displayResults(results) {
             const resultDiv = document.getElementById('prediction-result');
             const mainPred = results[0];
             const crop = mainPred.crop;
 
-            // Hero
             document.getElementById('prediction-icon').textContent = crop.icon;
             document.getElementById('prediction-name').textContent = crop.name;
             document.getElementById('prediction-scientific').textContent = crop.scientific;
@@ -1799,7 +1604,6 @@
                 document.getElementById('confidence-fill').style.width = `${mainPred.confidence * 100}%`;
             }, 100);
 
-            // DTI Price Section
             const trendIcon = crop.trend === 'up' ? '↑' : crop.trend === 'down' ? '↓' : '→';
             const trendClass = crop.trend;
             const trendText = crop.trendValue > 0 ? `+${crop.trendValue}%` : crop.trendValue < 0 ? `${crop.trendValue}%` : 'Stable';
@@ -1834,7 +1638,6 @@
                 </div>
             `;
 
-            // Crop Info
             document.getElementById('info-grid').innerHTML = `
                 <div class="info-card">
                     <div class="info-label">Scientific Name</div>
@@ -1862,7 +1665,6 @@
                 </div>
             `;
 
-            // Alternatives
             const altContainer = document.getElementById('alt-predictions');
             if (results.length > 1) {
                 altContainer.innerHTML = results.slice(1, 4).map((res, idx) => `
@@ -1890,9 +1692,6 @@
             resultDiv.classList.add('active');
         }
 
-        // ============================================================
-        // SHOW CROP DETAILS FROM DATABASE
-        // ============================================================
         function showCropDetails(cropKey) {
             const crop = Object.values(ROOT_CROPS).find(c => c.name.toLowerCase() === cropKey);
             if (!crop) return;
@@ -1910,9 +1709,6 @@
             document.querySelector('.results-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // ============================================================
-        // TOAST
-        // ============================================================
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-message').textContent = message;
@@ -1925,7 +1721,6 @@
             }, 3000);
         }
 
-        // Start
         init();
     </script>
 </body>
